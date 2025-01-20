@@ -15,7 +15,7 @@ const TextField = ({ label, errorMessage, ...props }: TextFieldProps) => {
       error={!!errorMessage}
       helperText={errorMessage}
       fullWidth
-      {...props} // Spread all additional props, including `sx`
+      {...props}
     />
   );
 };

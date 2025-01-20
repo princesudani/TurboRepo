@@ -5,7 +5,7 @@ import {
 } from "@mui/material";
 
 type CustomButtonProps = MuiButtonProps & {
-  isLoading?: boolean; // Custom prop to show a loading state
+  isLoading?: boolean;
 };
 
 export const Button = ({
@@ -15,11 +15,8 @@ export const Button = ({
   ...props
 }: CustomButtonProps) => {
   return (
-    <MuiButton
-      disabled={disabled || isLoading} // Disable the button if loading
-      {...props} // Spread all additional props
-    >
-      {isLoading ? "Loading..." : children} {/* Show loading text if isLoading */}
+    <MuiButton disabled={disabled || isLoading} {...props}>
+      {isLoading ? "Loading..." : children}
     </MuiButton>
   );
 };

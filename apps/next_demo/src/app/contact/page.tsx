@@ -1,5 +1,7 @@
 "use client";
 import { createTheme, ThemeProvider } from "@mui/material";
+import { Button } from "@repo/fun-demo/Button";
+import TextField from "@repo/ui/TextField";
 import React from "react";
 import { FieldErrors, useForm } from "react-hook-form";
 
@@ -27,11 +29,11 @@ const Contact = () => {
       message: "",
       details: {
         contact: "",
-        address: ""
+        address: "",
       },
-      personal_detail: [ "", "" ],
+      personal_detail: ["", ""],
     },
-    mode: "all"
+    mode: "all",
   });
   console.log("errors", errors);
 
@@ -40,20 +42,19 @@ const Contact = () => {
     reset();
   };
   const onError = (errors: FieldErrors<formValues>) => {
-    console.log("Errrorrrr",errors );
-    
-  }
+    console.log("Errrorrrr", errors);
+  };
 
   const theme = createTheme({
-      palette: { 
-        mode: localStorage.getItem("darkMode") == "true" ? 'dark' : 'light',
-      },
-    });
+    palette: {
+      mode: localStorage.getItem("darkMode") == "true" ? "dark" : "light",
+    },
+  });
 
   return (
     <div className="max-w-4xl mx-auto px-4 my-5 py-8 bg-white shadow-md rounded-lg">
       <h1 className="text-3xl font-semibold text-center text-gray-800 mb-6">
-        Contact Us
+        Contact Us UseForm
       </h1>
 
       <form onSubmit={handleSubmit(onSubmit, onError)}>
@@ -65,7 +66,7 @@ const Contact = () => {
             >
               Full Name:
             </label>
-            <input
+            <TextField
               {...register("name", { required: "This is Required Name." })}
               placeholder="Enter Name"
               className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
@@ -80,7 +81,7 @@ const Contact = () => {
             >
               Email Address:
             </label>
-            <input
+            <TextField
               {...register("email", {
                 required: "This is Required Email.",
                 pattern: {
@@ -128,7 +129,7 @@ const Contact = () => {
             >
               Contact No:
             </label>
-            <input
+            <TextField
               {...register("details.contact", {
                 required: "This is Required Contact.",
               })}
@@ -147,7 +148,7 @@ const Contact = () => {
             >
               Address:
             </label>
-            <input
+            <TextField
               {...register("details.address", {
                 required: "This is Required Address.",
               })}
@@ -166,7 +167,7 @@ const Contact = () => {
             >
               Age:
             </label>
-            <input
+            <TextField
               {...register("personal_detail.0", {
                 valueAsNumber: true,
                 required: "This is Required Age.",
@@ -174,7 +175,7 @@ const Contact = () => {
               placeholder="Enter Age"
               className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
             />
-            <p className="text-red-500 text-sm mt-1"> 
+            <p className="text-red-500 text-sm mt-1">
               {errors.personal_detail?.[0]?.message}
             </p>
           </div>
@@ -186,7 +187,7 @@ const Contact = () => {
             >
               Height:
             </label>
-            <input
+            <TextField
               {...register("personal_detail.1", {
                 required: "This is Required Height.",
               })}
@@ -199,12 +200,15 @@ const Contact = () => {
           </div>
 
           <div className="text-center">
-            <input
+            <Button
+              variant="contained"
               type="submit"
               value="Submit"
-              disabled={!isValid || !isDirty}
+              // disabled={!isValid || !isDirty}
               className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition duration-300 cursor-pointer"
-            />
+            >
+              Submit
+            </Button>
           </div>
         </ThemeProvider>
       </form>

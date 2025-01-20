@@ -1,15 +1,17 @@
 "use client";
 
-import TextField from "@repo/ui/TextField";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-// import { Button } from "@repo/ui/button";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@repo/fun-demo/Button";
+import ModalBox from "@repo/ui/ModalBox";
+import TanstackQR from "../components/TanstackQR";
+import Link from "next/link";
+import { CircularProgress } from "@mui/material";
 
 const pagination = (_page: number, _limit: number = 4) => {
   return axios.get(`http://localhost:4001/posts`, {
-    params: { _page, _limit },
+    // params: { _page, _limit },
   });
 };
 
@@ -21,18 +23,39 @@ const removePost = (postId: string) => {
   return axios.delete(`http://localhost:4001/posts/${postId}`);
 };
 
+const updatePost = (post: { title: string; body: string; id: string }) => {
+  return axios.put(`http://localhost:4001/posts/${post.id}`, post);
+};
+
 export const Home = () => {
   const [page, setPage] = useState(1);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
   const [isInitialFetch, setIsInitialFetch] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
+  const [postIdToRemove, setPostIdToRemove] = useState<string | null>(null);
+  const [openModal, setOpenModal] = useState(false);
+
+  const handleOpenModal = (postId: string) => {
+    setPostIdToRemove(postId);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => setOpenModal(false);
+
+  const handleConfirm = () => {
+    if (postIdToRemove) {
+      removeMutate(postIdToRemove);
+    }
+    handleCloseModal();
+  };
 
   const queryClient = useQueryClient();
 
   const { data, isError, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ["posts", page],
     queryFn: () => pagination(page, 4),
-    enabled: false,
+    enabled: isInitialFetch,
+
+    // enabled: false,
 
     // staleTime: 30000,
 
@@ -40,20 +63,30 @@ export const Home = () => {
     // refetchIntervalInBackground: true,
   });
 
+  const { mutate: updatePostMutate } = useMutation({
+    mutationFn: updatePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts", page] });
+    },
+  });
+
   const { mutate } = useMutation({
     mutationFn: postData,
-    onSuccess: (newData: any) => {
-      // queryClient.invalidateQueries("posts")
-      queryClient.setQueryData(["posts"], (oldData: any) => {
-        return {
-          ...oldData,
-          data: [...oldData.data, newData.data],
-        };
-      });
-    },
-
+    // onSuccess: (newData: any) => {
+    // 1st Method
+    // queryClient.invalidateQueries({ queryKey: ["posts", page] });
+    // 2nd Method
+    // queryClient.setQueryData(["posts", page], (oldData: any) => {
+    //   return {
+    //     ...oldData,
+    //     data: [...oldData.data, newData.data],
+    //   };
+    // });
+    // 3rd Method
+    // refetch();
+    // },
     // onMutate: async (newPost: any) => {
-    //   await queryClient.cancelQueries(["posts"]);
+    //   await queryClient.cancelQueries({ queryKey: ["posts"] });
     //   const previousPostData = queryClient.getQueryData(["posts"]);
     //   queryClient.setQueryData(["posts"], (oldData: any) => {
     //     return {
@@ -64,24 +97,24 @@ export const Home = () => {
     //       ],
     //     };
     //   });
-
     //   return {
     //     previousPostData,
     //   };
     // },
-
     // onError: (_error, context, _post) => {
     //   queryClient.setQueryData(["posts"], context.previousPostData);
     // },
     // onSettled: () => {
-    //   queryClient.invalidateQueries(["posts"]);
+    //   queryClient.invalidateQueries({ queryKey: ["posts"] });
     // },
   });
 
   const { mutate: removeMutate } = useMutation({
     mutationFn: removePost,
     onSuccess: (_, postId) => {
-      queryClient.setQueryData(["posts"], (oldData: any) => {
+      queryClient.setQueryData(["posts", page], (oldData: any) => {
+        console.log("oldData", oldData);
+
         return {
           ...oldData,
           data: oldData.data.filter((post: any) => post.id !== postId),
@@ -93,36 +126,43 @@ export const Home = () => {
     },
   });
 
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-
-    const post = { title, body };
-
-    mutate(post);
-    setTitle("");
-    setBody("");
-  };
-
   const handleShowData = () => {
     setIsInitialFetch(true);
-    refetch();
   };
 
-  useEffect(() => {
-    if (isInitialFetch) {
-      refetch();
-    }
-  }, [page, isInitialFetch, refetch]);
-
   if (isLoading) {
-    return <h1>Page is loading...</h1>;
+    return (
+      <h1
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginTop: 10,
+        }}
+      >
+        <CircularProgress />
+      </h1>
+    );
   }
 
   if (isError) {
     return <div>{error.message}</div>;
   }
   const handleRemove = (postId: string) => {
-    removeMutate(postId);
+    handleOpenModal(postId);
+  };
+
+  const handleEdit = (postId: string) => {
+    const postToEdit = data?.data.find((post: any) => post.id === postId);
+    setEditingPost(postToEdit);
+  };
+
+  const handleEditSubmit = (editedPost: {
+    id: string;
+    title: string;
+    body: string;
+  }) => {
+    updatePostMutate(editedPost);
+    setEditingPost(null);
   };
 
   console.log("call-", data);
@@ -130,47 +170,68 @@ export const Home = () => {
 
   return (
     <>
-      <Button
-        variant="outlined"
-        className="border border-black bg-slate-300 max-w-4xl m-5"
-        onClick={() => handleShowData()}
-      >
-        Show Data
-      </Button>
+      {!data?.data ? (
+        <div style={{ margin: 10 }}>
+          <Button
+            variant="outlined"
+            className="border border-black bg-slate-300 max-w-4xl m-5"
+            onClick={() => handleShowData()}
+          >
+            Show Data
+          </Button>
+        </div>
+      ) : (
+        ""
+      )}
 
       <div className="post max-w-4xl mx-auto pt-5">
-        <form onSubmit={handleSubmit} className="post">
-          <TextField
-            sx={{ width: "50%", border: "white" }}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter post title"
-            value={title}
-          />
-          <TextField
-            sx={{ width: "50%", border: "white" }}
-            onChange={(e: any) => setBody(e.target.value)}
-            placeholder="Enter post body"
-            value={body}
-          />
-          <Button type="submit" variant="contained">
-            Post
-          </Button>
-        </form>
+        <TanstackQR
+          handleEditSubmit={handleEditSubmit}
+          editingPost={editingPost}
+        />
+
         {data?.data.map((post: any) => (
           <div className="post-item" key={post.id}>
-            <h3 className="post-title">{post.title}</h3>
-            <p className="post-body">{post.body}</p>
-            <Button
-              onClick={() => handleRemove(post.id)}
-              style={{ backgroundColor: "white", color: "black" }}
+            <Link href={`/${post.id}`}>
+              <h3 className="post-title">{post.title}</h3>
+              <p className="post-body">{post.body}</p>
+            </Link>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <Button
+                onClick={() => handleRemove(post.id)}
+                style={{ backgroundColor: "white", color: "black" }}
+              >
+                Remove
+              </Button>
+              <Button
+                onClick={() => handleEdit(post.id)}
+                style={{ backgroundColor: "white", color: "black" }}
+              >
+                Edit
+              </Button>
+            </div>
+            <ModalBox
+              open={openModal}
+              onClose={handleCloseModal}
+              title="Confirm Delete"
+              onConfirm={handleConfirm}
+              confirmText="Yes"
+              cancelText="No"
+              titleTextStyle={{ fontWeight: "bold" }}
+              modalBoxStyle={{
+                opacity: 0.4,
+                transition: "opacity 0.3s ease, visibility 0.3s ease",
+              }}
             >
-              Remove
-            </Button>
+              <p style={{ fontWeight: "bold" }}>
+                Are you sure want to Remove this Data ?
+              </p>
+            </ModalBox>
           </div>
         ))}
 
-        {data?.data ? (
-          <div style={{ display: "flex", gap: "10px" }}>
+        {/* {data?.data ? (
+          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
             <Button
               variant="contained"
               onClick={() => setPage((prev) => prev - 1)}
@@ -178,18 +239,18 @@ export const Home = () => {
             >
               Prev Page
             </Button>
-            <span style={{ marginTop: "5px" }}>{page} of 5</span>
+            <span style={{ marginTop: "5px" }}>{page}</span>
             <Button
               variant="contained"
               onClick={() => setPage((prev) => prev + 1)}
-              disabled={page == 5 ? true : false}
+              disabled={data.data.length < 4}
             >
               Next Page
             </Button>
           </div>
         ) : (
           ""
-        )}
+        )} */}
       </div>
     </>
   );

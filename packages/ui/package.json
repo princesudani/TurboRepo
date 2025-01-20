@@ -8,7 +8,8 @@
     "./card": "./src/card.tsx",
     "./code": "./src/code.tsx",
     "./topbar": "./src/topbar.tsx",
-    "./TextField": "./src/TextField/TextField.tsx"
+    "./TextField": "./src/TextField/TextField.tsx",
+    "./ModalBox": "./src/ModalBox/ModalBox.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
