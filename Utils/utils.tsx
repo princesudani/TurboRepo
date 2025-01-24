@@ -16,6 +16,18 @@ export function useGetGenderOptions() {
       return { genderOptions }
 }
 
+export const filterChangedFormFields = <T extends FormData>(
+    allFields: T,
+    dirtyFields: Record<keyof T, boolean | Record<string, unknown> | boolean[]>,
+    initialValues?: FormData | null
+): Partial<T> => {
+    const keysToPick = (Object.keys(dirtyFields) as Array<keyof T>).filter(
+        (key) => dirtyFields[key]
+    );
+    const result = _.pick(allFields, keysToPick);
+    return {...result, id: initialValues?.id};
+};
+
 const HandleUpdateData = ({ options, draftBtn }: HandleAddDataProps) => {
     return useMutation({
         mutationKey: ['updateData'],
@@ -63,7 +75,7 @@ const HandleGetData = ({ options, filterOption }: HandleGetDataProps) => {
     }, []);
 type ProductFormHandles = {
     submitForm: (onSubmit: (formValues: Partial<FormData>) => void) => void;
-    resetForm: any
+    resetForm: UseFormReset<FormData>
 };
 export const DataForm = React.forwardRef<ProductFormHandles, DataFormProps>(
     (
@@ -145,3 +157,8 @@ const api = {
     delete: <T>(endpoint: string): Promise<AxiosResponse<T>> =>
         axiosHttp.delete(endpoint),
 };
+
+onsuccess ma
+ queryClient.invalidateQueries({
+                    queryKey: ['getData']
+                })
