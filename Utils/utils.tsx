@@ -27,10 +27,16 @@ const HandleUpdateData = ({ options, draftBtn }: HandleAddDataProps) => {
     });
 }
 
+const all = ["auth"] as string[]
+export const authKeys = {
+
+  login:  [...all, "login"],
+};
+
 const HandleGetData = ({ options, filterOption }: HandleGetDataProps) => {
     // await axiosHttp.patch(`posts?isDraft=${filterOption ? filterOption == 'draft' ? true : false : ''}`);
     const { isLoading, isError, data = [], refetch, isFetching } = useQuery<any>({
-        queryKey: ['getData'],
+        queryKey: [...authKeys['login'], 'hello'],
         queryFn: async () => {
             const response = await axiosHttp.get(`posts?isDraft=${filterOption ? filterOption == 'draft' ? true : false : ''}`)
             if (!response) {
@@ -122,3 +128,20 @@ const {
       )}
     </Stack>
   );
+
+const api = {
+    get: <T>(endpoint: string, params = {}): Promise<AxiosResponse<T>> =>
+        axiosHttp.get(endpoint, { params }),
+
+    post: <T>(endpoint: string, data: Partial<T>): Promise<AxiosResponse<T>> =>
+        axiosHttp.post(endpoint, data),
+
+    put: <T>(endpoint: string, data: Partial<T>): Promise<AxiosResponse<T>> =>
+        axiosHttp.put(endpoint, data),
+
+    patch: <T>(endpoint: string, data: Partial<T>): Promise<AxiosResponse<T>> =>
+        axiosHttp.patch(endpoint, data),
+
+    delete: <T>(endpoint: string): Promise<AxiosResponse<T>> =>
+        axiosHttp.delete(endpoint),
+};
